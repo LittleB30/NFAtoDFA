@@ -95,26 +95,34 @@ public class FA {
         for (char a : alpha) alphabets.add(a);
 
         String curLine;
-        String[] curSets;
-        String[] curSet;
-        for (int i = 0; i < numStates; i++) {
+        for (int i = 0; i < numStates; i++) { //for each state
             curLine = scan.nextLine().trim();
-            curLine = curLine.substring(curLine.indexOf("{"));
-            curLine = curLine.replaceAll("\\{", "");
-            curLine = curLine.replaceAll("\\}", "");
-            curSets = curLine.split(" ");
+            int leftIndex = -1;
+            int rightIndex = -1;
             ArrayList<ArrayList<Integer>> trans = new ArrayList<>();
-            for (String sets : curSets) {
-                curSet = sets.split(",");
-                ArrayList<Integer> s = new ArrayList<>();
-                for (String state : curSet) {
-                    if (!state.equals("")) {
-                        s.add(Integer.valueOf(state));
-                    }
+            for (int j = 0; j < curLine.length(); j++) { //find each set of "{}"
+                if (curLine.charAt(j) == '{') {
+                    leftIndex = j;
                 }
-                trans.add(s);
+                if (curLine.charAt(j) == '}') {
+                    rightIndex = j;
+                }
+                if (leftIndex != -1 && rightIndex != -1) { //then turn that set into an ArrayList<Integer>
+                    String curSet = curLine.substring(leftIndex+1, rightIndex);
+                    curSet = curSet.replaceAll(" ", "");
+                    String[] states = curSet.split(",");
+                    ArrayList<Integer> s = new ArrayList<>();
+                    for (String state : states) {
+                        if (!state.equals("")) {
+                            s.add(Integer.valueOf(state));
+                        }
+                    }
+                    trans.add(s); //add that set to this state's transitions
+                    leftIndex = -1;
+                    rightIndex = -1;
+                }
             }
-            transitions.add(trans);
+            transitions.add(trans); //add this state's transitions to the total transition function
         }
 
         initial = Integer.parseInt(scan.nextLine());
