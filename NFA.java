@@ -1,6 +1,7 @@
 public class NFA {
     public static void main(String[] args) {
         FA fa1 = new FA("nfaA");
+        fa1.printFA();
         FA fa2 = new FA("nfaB");
         FA fa3 = new FA("nfaC");
         FA fa4 = new FA("nfaD");

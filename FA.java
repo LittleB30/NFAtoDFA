@@ -62,10 +62,39 @@ public class FA {
      */
     public void printFA() {
         if (isNondeterministic) {
-            
+            System.out.print("Sigma: ");
+            for (Character c : alphabets) System.out.print(c + " ");
+            System.out.println("\n------");
+            for (int i = 0; i < numStates; i++) {
+                System.out.print(i + ": ");
+                for (int j = 0; j < transitions.get(0).size()-1; j++) {
+                    System.out.print("(" + alphabets.get(j) + "," + transitionToString(i, j) + ") ");
+                }
+                System.out.println("( " + "," + transitionToString(i, transitions.get(0).size()-1) + ")");
+            }
+            System.out.println("------");
         } else {
-            
+            System.out.print("Sigma:\t");
+            for (Character c : alphabets) System.out.print(c + "\t");
+            System.out.print("\n------");
+            for (int i = 0; i < alphabets.size(); i++) System.out.print("----");
+            for (int i = 0; i < numStates; i++) {
+                System.out.print((i < 10000?" ":"") + (i < 1000?" ":"") + (i < 100?" ":"") + (i < 10?" ":"") + i + ":\t");
+                for (ArrayList<Integer> transition : transitions.get(i)) {
+                    for (int t : transition) {
+                        System.out.print(t);
+                        if (!transition.equals(transitions.get(i).get(transitions.get(i).size()-1))) {
+                            System.out.print("\t");
+                        }
+                    }
+                }
+                System.out.println();
+            }
+            System.out.print("\n------");
+            for (int i = 0; i < alphabets.size(); i++) System.out.print("----");
         }
+        System.out.println(initial + ": Initial State");
+        System.out.println(acceptingToString() + ": Accepting State" + (accepting.size() > 1 ? "s":""));
     }
 
     public String toString() {
@@ -91,7 +120,7 @@ public class FA {
         
         numStates = Integer.parseInt(scan.nextLine());
 
-        char[] alpha = scan.nextLine().replaceAll(" ", "").toCharArray();
+        char[] alpha = scan.nextLine().replaceAll("\\s", "").toCharArray();
         for (char a : alpha) alphabets.add(a);
 
         String curLine;
@@ -109,7 +138,7 @@ public class FA {
                 }
                 if (leftIndex != -1 && rightIndex != -1) { //then turn that set into an ArrayList<Integer>
                     String curSet = curLine.substring(leftIndex+1, rightIndex);
-                    curSet = curSet.replaceAll(" ", "");
+                    curSet = curSet.replaceAll("\\s", "");
                     String[] states = curSet.split(",");
                     ArrayList<Integer> s = new ArrayList<>();
                     for (String state : states) {
@@ -127,7 +156,7 @@ public class FA {
 
         initial = Integer.parseInt(scan.nextLine());
 
-        String accept = scan.nextLine().trim();
+        String accept = scan.nextLine().replaceAll("\\s", "");
         accept = accept.substring(1, accept.length()-1);
         String[] a = accept.split(",");
         for (String state : a) {
@@ -140,6 +169,27 @@ public class FA {
             isNondeterministic = true;
         }
         scan.close();
+    }
+
+    private String transitionToString(int state, int transition) {
+        String temp = "{";
+        if (transitions.get(state).get(transition).size() > 0) {
+            for (int num : transitions.get(state).get(transition)) {
+                temp += num + ",";
+            }
+            temp += "\b";
+        }
+        temp += "}";
+        return temp;
+    }
+
+    private String acceptingToString() {
+        String temp = "";
+        for (int accept : accepting) {
+            temp += accept + ",";
+        }
+        temp += "\b";
+        return temp;
     }
 
     /***********GETTERS***********/
