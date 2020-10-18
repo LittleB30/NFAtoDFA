@@ -1,6 +1,10 @@
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class FA {
 	private int numStates;
@@ -20,7 +24,7 @@ public class FA {
         transitions = new ArrayList<>();
         initial = -1;
         accepting = new ArrayList<>();
-        isNondeterministic = true;
+        isNondeterministic = false;
     }
 
     /**
@@ -58,6 +62,37 @@ public class FA {
 
     /***********PUBLIC METHODS***********/
     /**
+     * Converts the current nondeterministic FA to an equivalent deterministic FA.
+     * @return a DFA equivalent to the current FA if it nondeterministic, otherwise null
+     */
+    public FA toDFA() {
+        FA dfa = null;
+        if (isNondeterministic) {
+            dfa = new FA();
+            Map<Set<Integer>,ArrayList<Set<Integer>>> transitonTable = new HashMap<>(); 
+
+            ArrayList<Set<Integer>> trans = new ArrayList<>();
+            Set<Integer> alphSet = getLambdaClosure(initial);
+            boolean foundAllStates = false;
+            while (!foundAllStates) {
+                for (int i = 0; i < alphabets.size()-1; i++) { //for each nonlambda transition
+                    //trans.add(defineTransition(i));
+                }
+                foundAllStates = true;
+                for (Set<Integer> a : trans) {
+                    if (!transitonTable.containsKey(a)) {
+                        foundAllStates = false;
+                    }
+                }
+            }
+
+            dfa.isNondeterministic = false;
+        }
+
+        return dfa;
+    }
+
+    /**
      * Prints the FA based on whether or not it is deterministic.
      */
     public void printFA() {
@@ -83,7 +118,7 @@ public class FA {
                 for (ArrayList<Integer> transition : transitions.get(i)) {
                     for (int t : transition) {
                         System.out.print(t);
-                        if (!transition.equals(transitions.get(i).get(transitions.get(i).size()-1))) {
+                        if (!transition.equals(getLambdaTranstions(i))) {
                             System.out.print("\t");
                         }
                     }
@@ -169,6 +204,52 @@ public class FA {
             isNondeterministic = true;
         }
         scan.close();
+    }
+
+    /**
+     * Adds a transition to the transitions ArrayList and increases the number of states.
+     */
+    private void addTransition(ArrayList<ArrayList<Integer>> trans) {
+        transitions.add(trans);
+        numStates++;
+    }
+
+    /** 
+     * @param state the state of which to get the lambda transition
+     * @return the lambda transition of a given state if nondeterministic, otherwise returns null
+     */
+    private ArrayList<Integer> getLambdaTranstions(int state) {
+        ArrayList<Integer> lambda = null;
+        if (isNondeterministic) {
+            lambda = transitions.get(state).get(transitions.get(state).size()-1);
+        }
+
+        return lambda;
+    }
+
+    /**
+     * @param state the state of which to get the lambda closure
+     * @return the lambda closure of a given state if nondeterministic, otherwise returns null
+     */
+    private Set<Integer> getLambdaClosure(int state) {
+        Set<Integer> lambda = null;
+        if (isNondeterministic) {
+            lambda = new TreeSet<>();
+            lambda.add(state);
+            for (int lTrans : getLambdaTranstions(state)) {
+                closureHelper(lTrans, lambda);
+            }
+        }
+
+        return lambda;
+    }
+
+    private void closureHelper(int state, Set<Integer> lambda) {
+        if (lambda.add(state)) {
+            for (int t : getLambdaTranstions(state)) {
+                closureHelper(t, lambda);
+            }
+        }
     }
 
     private String transitionToString(int state, int transition) {
