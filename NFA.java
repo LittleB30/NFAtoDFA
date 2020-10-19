@@ -1,3 +1,6 @@
+/**
+ * @author Alex Smith (alsmi14@ilstu.edu)
+ */
 public class NFA {
     public static void main(String[] args) {
         FA fa1 = new FA("nfa2");

@@ -8,6 +8,9 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeSet;
 
+/**
+ * @author Alex Smith (alsmi14@ilstu.edu)
+ */
 public class FA {
     private int numStates;
     private ArrayList<Character> alphabets;
@@ -82,12 +85,21 @@ public class FA {
         return dfa;
     }
 
+    /**
+     * Determines if a given string is a sentence of this FA.
+     * @param str the string to be evaluated
+     * @return true if the string is a sentence of this FA, false otherwise
+     */
     public boolean isSentence(String str) {
         return false;
     }
 
-    public boolean areSentences(String fileName) {
-        return false;
+    /**
+     * Reads strings from a file and outputs if they are a sentence of this FA.
+     * @param fileName the file to be read from
+     */
+    public void areSentences(String fileName) {
+        
     }
 
     /**
@@ -246,6 +258,11 @@ public class FA {
         return lambda;
     }
 
+    /**
+     * Recursive helper of getLambdaClosure(int).
+     * @param state the current state
+     * @param lambda the set of states to be added to
+     */
     private void closureHelper(int state, Set<Integer> lambda) {
         if (lambda.add(state)) {
             for (int t : getLambdaTranstions(state)) {
@@ -319,14 +336,18 @@ public class FA {
         }
     }
 
+    /**
+     * Finds a set of all states reachable from a given set of states with input alpha.
+     * @param alpha the index of the desired alphabet
+     * @param state the set fo states to be tested on
+     * @return the set of all states reachable from a given set of states with input alpha.
+     */
     private Set<Integer> defineTransition(int alpha, Set<Integer> state) {
         Set<Integer> unionSet = new HashSet<>();
         for (int i : state) {
             Set<Integer> trans1 = new HashSet<>(getLambdaClosure(i));
-            unionSet.addAll(trans1);
             for (int j : trans1) {
                 Set<Integer> trans2 = new HashSet<>(transitions.get(j).get(alpha));
-                unionSet.addAll(trans2);
                 for (int k : trans2) {
                     Set<Integer> trans3 = new HashSet<>(getLambdaClosure(k));
                     unionSet.addAll(trans3);
@@ -337,10 +358,15 @@ public class FA {
         return unionSet;
     }
 
-    private String transitionToString(int state, int transition) {
+    /**
+     * @param state the desired state
+     * @param alpha the desired alphabet
+     * @return a string from of the transition function for a given state and alphabet
+     */
+    private String transitionToString(int state, int alpha) {
         String temp = "{";
-        if (transitions.get(state).get(transition).size() > 0) {
-            for (int num : transitions.get(state).get(transition)) {
+        if (transitions.get(state).get(alpha).size() > 0) {
+            for (int num : transitions.get(state).get(alpha)) {
                 temp += num + ",";
             }
             temp += "\b";
@@ -349,6 +375,9 @@ public class FA {
         return temp;
     }
 
+    /**
+     * @return a string form of the list of accepting states
+     */
     private String acceptingToString() {
         String temp = "";
         for (int accept : accepting) {
