@@ -1,20 +1,22 @@
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeSet;
 
 public class FA {
-	private int numStates;
-	private ArrayList<Character> alphabets;
-	private ArrayList<ArrayList<ArrayList<Integer>>> transitions;
-	private int initial;
-	private ArrayList<Integer> accepting;
-	private boolean isNondeterministic;
+    private int numStates;
+    private ArrayList<Character> alphabets;
+    private ArrayList<ArrayList<ArrayList<Integer>>> transitions;
+    private int initial;
+    private ArrayList<Integer> accepting;
+    private boolean isNondeterministic;
 
-    /***********CONSTRUCTORS***********/
+    /*********** CONSTRUCTORS ***********/
     /**
      * Constructs an empty finite automata which is assumed to be nondeterministic.
      */
@@ -29,6 +31,7 @@ public class FA {
 
     /**
      * Constructs a finite atomata from information stored in a file.
+     * 
      * @param fileName file to be read from
      */
     public FA(String fileName) {
@@ -41,10 +44,11 @@ public class FA {
 
     /**
      * Constructs a finite atomata with given arguments.
-     * @param num number of states
-     * @param alpha finite list of alphabets
-     * @param t transition function
-     * @param i initial state
+     * 
+     * @param num    number of states
+     * @param alpha  finite list of alphabets
+     * @param t      transition function
+     * @param i      initial state
      * @param accept list of accepting states
      */
     public FA(int num, ArrayList<Character> alpha, ArrayList<ArrayList<ArrayList<Integer>>> t, int i, ArrayList<Integer> accept) {
@@ -53,43 +57,37 @@ public class FA {
         transitions = t;
         initial = i;
         accepting = accept;
-        if (alphabets.size() == transitions.get(0).size()) {//if there is not a lambda closure then it is a DFA.
+        if (alphabets.size() == transitions.get(0).size()) {// if there is not a lambda closure then it is a DFA.
             isNondeterministic = false;
         } else {
             isNondeterministic = true;
         }
     }
 
-    /***********PUBLIC METHODS***********/
+    /*********** PUBLIC METHODS ***********/
     /**
      * Converts the current nondeterministic FA to an equivalent deterministic FA.
-     * @return a DFA equivalent to the current FA if it nondeterministic, otherwise null
+     * @return a DFA equivalent to the current FA if it is nondeterministic, otherwise null
      */
     public FA toDFA() {
         FA dfa = null;
         if (isNondeterministic) {
             dfa = new FA();
-            Map<Set<Integer>,ArrayList<Set<Integer>>> transitonTable = new HashMap<>(); 
-
-            ArrayList<Set<Integer>> trans = new ArrayList<>();
-            Set<Integer> alphSet = getLambdaClosure(initial);
-            boolean foundAllStates = false;
-            while (!foundAllStates) {
-                for (int i = 0; i < alphabets.size()-1; i++) { //for each nonlambda transition
-                    //trans.add(defineTransition(i));
-                }
-                foundAllStates = true;
-                for (Set<Integer> a : trans) {
-                    if (!transitonTable.containsKey(a)) {
-                        foundAllStates = false;
-                    }
-                }
-            }
-
+            dfa.alphabets = new ArrayList<>(alphabets);
+            determinizeTransitions(dfa);
+            dfa.initial = 0;
             dfa.isNondeterministic = false;
         }
 
         return dfa;
+    }
+
+    public boolean isSentence(String str) {
+        return false;
+    }
+
+    public boolean areSentences(String fileName) {
+        return false;
     }
 
     /**
@@ -99,7 +97,9 @@ public class FA {
         if (isNondeterministic) {
             System.out.print("Sigma: ");
             for (Character c : alphabets) System.out.print(c + " ");
-            System.out.println("\n------");
+            System.out.print("\n------");
+            for (int i = 0; i < alphabets.size(); i++) System.out.print("--");
+            System.out.println();
             for (int i = 0; i < numStates; i++) {
                 System.out.print(i + ": ");
                 for (int j = 0; j < transitions.get(0).size()-1; j++) {
@@ -107,12 +107,14 @@ public class FA {
                 }
                 System.out.println("( " + "," + transitionToString(i, transitions.get(0).size()-1) + ")");
             }
-            System.out.println("------");
+            System.out.print("------");
+            for (int i = 0; i < alphabets.size(); i++) System.out.print("--");
         } else {
             System.out.print("Sigma:\t");
             for (Character c : alphabets) System.out.print(c + "\t");
-            System.out.print("\n------");
-            for (int i = 0; i < alphabets.size(); i++) System.out.print("----");
+            System.out.print("\n---------");
+            for (int i = 1; i < alphabets.size(); i++) System.out.print("--------");
+            System.out.println();
             for (int i = 0; i < numStates; i++) {
                 System.out.print((i < 10000?" ":"") + (i < 1000?" ":"") + (i < 100?" ":"") + (i < 10?" ":"") + i + ":\t");
                 for (ArrayList<Integer> transition : transitions.get(i)) {
@@ -125,11 +127,11 @@ public class FA {
                 }
                 System.out.println();
             }
-            System.out.print("\n------");
-            for (int i = 0; i < alphabets.size(); i++) System.out.print("----");
+            System.out.print("---------");
+            for (int i = 1; i < alphabets.size(); i++) System.out.print("--------");
         }
-        System.out.println(initial + ": Initial State");
-        System.out.println(acceptingToString() + ": Accepting State" + (accepting.size() > 1 ? "s":""));
+        System.out.println("\n" + initial + ": Initial State");
+        System.out.println(acceptingToString() + ": Accepting State" + (accepting.size() > 1 ? "s":"") + "\n");
     }
 
     public String toString() {
@@ -250,6 +252,89 @@ public class FA {
                 closureHelper(t, lambda);
             }
         }
+    }
+
+    /**
+     * Determinizes the transitions and accepting states of the current FA and stores them in the given FA.
+     * @param dfa the FA to determinize transitions to
+     */
+    private void determinizeTransitions(FA dfa) {
+        if (isNondeterministic) {
+            Set<Set<Integer>> states = new LinkedHashSet<>();
+            ArrayList<ArrayList<Set<Integer>>> allTrans = new ArrayList<>();
+            ArrayList<Set<Integer>> trans = new ArrayList<>();
+            Set<Integer> state = getLambdaClosure(initial);
+            states.add(state);
+
+            //fully define the new transition function
+            boolean foundAllStates = false;
+            int count = 1;
+            while (!foundAllStates) {
+                for (int i = 0; i < alphabets.size()-1; i++, count++) { //for each nonlambda transition
+                    trans.add(defineTransition(i, state));
+                }
+                for (Set<Integer> a : trans) {
+                    states.add(a);
+                }
+                allTrans.add(trans);
+
+                Iterator<Set<Integer>> it = states.iterator();
+                for (int i = 0; i < count; i++) { //get next state
+                    try {
+                        state = it.next();
+                    } catch (NoSuchElementException e) {
+                        foundAllStates = true;
+                    }
+                }
+            }
+
+            //turn sets into single states for deterministic transitions
+            for (ArrayList<Set<Integer>> line : allTrans) {
+                ArrayList<ArrayList<Integer>> t = new ArrayList<>();
+                for (Set<Integer> one : line) {
+                    Iterator<Set<Integer>> it = states.iterator();
+                    for (int i = 0; i < states.size(); i++) { //find state
+                        if (one.equals(it.next())) {
+                            ArrayList<Integer> s = new ArrayList<>();
+                            s.add(i);
+                            t.add(s);
+                            break;
+                        }
+                    }   
+                }
+                dfa.addTransition(t);
+            }
+
+            //find new accepting states
+            Iterator<Set<Integer>> it = states.iterator();
+            for (int i = 0; i < states.size(); i++) { 
+                Set<Integer> curSet = it.next();
+                for (int s : curSet) {
+                    if (accepting.contains(s)) {
+                        dfa.accepting.add(i);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private Set<Integer> defineTransition(int alpha, Set<Integer> state) {
+        Set<Integer> unionSet = new HashSet<>();
+        for (int i : state) {
+            Set<Integer> trans1 = new HashSet<>(getLambdaClosure(i));
+            unionSet.addAll(trans1);
+            for (int j : trans1) {
+                Set<Integer> trans2 = new HashSet<>(transitions.get(j).get(alpha));
+                unionSet.addAll(trans2);
+                for (int k : trans2) {
+                    Set<Integer> trans3 = new HashSet<>(getLambdaClosure(k));
+                    unionSet.addAll(trans3);
+                }
+            }
+        }
+
+        return unionSet;
     }
 
     private String transitionToString(int state, int transition) {
