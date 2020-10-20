@@ -1,11 +1,20 @@
 /**
+ * This is the driver class used to run the FA class.
  * @author Alex Smith (alsmi14@ilstu.edu)
  */
 public class NFA {
     public static void main(String[] args) {
-        FA fa1 = new FA("nfaE");
-        fa1.printFA();
-        FA fa2 = fa1.toDFA();
-        fa2.printFA();
+        // if (args.length < 2) {
+        //     return;
+        // }
+        // String faFile = args[0];
+        // String stringsFile = args[1];
+        String faFile = "nfa2";
+        String stringsFile = "strings.txt";
+        FA nfa = new FA(faFile);
+        nfa.printFA();
+        FA dfa = nfa.toDFA();
+        dfa.printFA();
+        dfa.areSentences(stringsFile, 30);
     }
 }

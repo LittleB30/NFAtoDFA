@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
+ * This class defines a Finite Automata of eiter nondeterministic or deterministic capabilities.
  * @author Alex Smith (alsmi14@ilstu.edu)
  */
 public class FA {
@@ -21,7 +22,7 @@ public class FA {
 
     /*********** CONSTRUCTORS ***********/
     /**
-     * Constructs an empty finite automata which is assumed to be nondeterministic.
+     * Constructs an empty finite automata which is assumed to be deterministic.
      */
     public FA() {
         numStates = 0;
@@ -86,20 +87,68 @@ public class FA {
     }
 
     /**
-     * Determines if a given string is a sentence of this FA.
+     * Determines if a given string is a sentence of this DFA.
      * @param str the string to be evaluated
-     * @return true if the string is a sentence of this FA, false otherwise
+     * @return true if the string is a sentence of this DFA, false otherwise
      */
     public boolean isSentence(String str) {
-        return false;
+        boolean isSentence = false;
+        if (!isNondeterministic) {
+            int state = initial;
+            ArrayList<ArrayList<Integer>> cur = transitions.get(state);
+            boolean invalidAlphabet = false;
+            for (char a : str.toCharArray()) {
+                try {
+                    state = cur.get(alphabets.indexOf(a)).get(0);
+                } catch (IndexOutOfBoundsException e) {
+                    if (!(a == '\0')) {
+                        invalidAlphabet = true;
+                        break;
+                    }
+                }
+                cur = transitions.get(state);
+            }
+            if (!invalidAlphabet && accepting.contains(state)) {
+                isSentence = true;
+            }
+        }
+        return isSentence;
     }
 
     /**
-     * Reads strings from a file and outputs if they are a sentence of this FA.
+     * Reads strings from a file and outputs if they are a sentence of this DFA. Note: all false if NFA
      * @param fileName the file to be read from
      */
-    public void areSentences(String fileName) {
+    public void areSentences(String fileName, int numStrings) {
+        ArrayList<Boolean> areSentences = new ArrayList<>();
+        Scanner scan = null;
+		try {
+			scan = new Scanner(new File(fileName));
+        } catch (Exception e) {
+            System.out.println(e.getStackTrace());
+            return;
+        }
         
+        try {
+            String curLine;
+            for (int i = 0; i < numStrings; i++) { 
+                curLine = scan.nextLine().trim();
+                areSentences.add(isSentence(curLine));
+            }
+        } catch (NoSuchElementException e) {}
+
+        System.out.println("Parsing results of strings in " + fileName + " on DFA:");
+        int count = 1;
+        for (boolean cur : areSentences) {
+            System.out.print((cur?"Yes ":"No  "));
+            if (count%15 == 0) {
+                System.out.println();
+                count = 1;
+            } else {
+                count++;
+            }
+        }
+        scan.close();
     }
 
     /**
