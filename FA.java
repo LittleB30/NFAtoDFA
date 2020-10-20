@@ -107,13 +107,14 @@ public class FA {
      */
     public void printFA() {
         if (isNondeterministic) {
+            System.out.println("=NFA=");
             System.out.print("Sigma: ");
             for (Character c : alphabets) System.out.print(c + " ");
             System.out.print("\n------");
             for (int i = 0; i < alphabets.size(); i++) System.out.print("--");
             System.out.println();
             for (int i = 0; i < numStates; i++) {
-                System.out.print(i + ": ");
+                System.out.print((i < 10000?" ":"") + (i < 1000?" ":"") + (i < 100?" ":"") + (i < 10?" ":"") + i + ": ");
                 for (int j = 0; j < transitions.get(0).size()-1; j++) {
                     System.out.print("(" + alphabets.get(j) + "," + transitionToString(i, j) + ") ");
                 }
@@ -122,6 +123,7 @@ public class FA {
             System.out.print("------");
             for (int i = 0; i < alphabets.size(); i++) System.out.print("--");
         } else {
+            System.out.println("=DFA=");
             System.out.print("Sigma:\t");
             for (Character c : alphabets) System.out.print(c + "\t");
             System.out.print("\n---------");
@@ -279,15 +281,15 @@ public class FA {
         if (isNondeterministic) {
             Set<Set<Integer>> states = new LinkedHashSet<>();
             ArrayList<ArrayList<Set<Integer>>> allTrans = new ArrayList<>();
-            ArrayList<Set<Integer>> trans = new ArrayList<>();
             Set<Integer> state = getLambdaClosure(initial);
             states.add(state);
 
             //fully define the new transition function
             boolean foundAllStates = false;
-            int count = 1;
+            int count = 2;
             while (!foundAllStates) {
-                for (int i = 0; i < alphabets.size()-1; i++, count++) { //for each nonlambda transition
+                ArrayList<Set<Integer>> trans = new ArrayList<>();
+                for (int i = 0; i < alphabets.size(); i++) { //for each nonlambda transition
                     trans.add(defineTransition(i, state));
                 }
                 for (Set<Integer> a : trans) {
@@ -303,6 +305,7 @@ public class FA {
                         foundAllStates = true;
                     }
                 }
+                count++;
             }
 
             //turn sets into single states for deterministic transitions
