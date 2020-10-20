@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * This class defines a Finite Automata of eiter nondeterministic or deterministic capabilities.
+ * This class defines a Finite Automata of either nondeterministic or deterministic capabilities.
  * @author Alex Smith (alsmi14@ilstu.edu)
  */
 public class FA {
@@ -34,7 +34,7 @@ public class FA {
     }
 
     /**
-     * Constructs a finite atomata from information stored in a file.
+     * Constructs a finite automata from information stored in a file.
      * 
      * @param fileName file to be read from
      */
@@ -120,7 +120,8 @@ public class FA {
      * @param fileName the file to be read from
      */
     public void areSentences(String fileName, int numStrings) {
-        ArrayList<Boolean> areSentences = new ArrayList<>();
+        if (!isNondeterministic) {
+            ArrayList<Boolean> areSentences = new ArrayList<>();
         Scanner scan = null;
 		try {
 			scan = new Scanner(new File(fileName));
@@ -149,6 +150,7 @@ public class FA {
             }
         }
         scan.close();
+        }
     }
 
     /**
